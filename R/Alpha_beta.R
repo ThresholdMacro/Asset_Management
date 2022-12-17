@@ -56,7 +56,7 @@ monthly_stock_returns <- function(ticker, start_year) {
 }
 ## ---------------------------
 
-year <- 2000
+year <- 2007
 
 monthly_stock_returns('GOOG', year)
 monthly_stock_returns('JPM', year)

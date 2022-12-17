@@ -1,0 +1,582 @@
+---
+title: "Bond Valuation and Analysis in R"
+author: "Sergio Garcia"
+
+output: html_document
+---
+
+# Introduction and Plain Vanilla Bond Valuation
+The following markdown file was taken from the following site and updated, adjusted for more appropriate data sources: 
+https://rpubs.com/Sergio_Garcia/bond_valuation_analysis_r
+
+
+Sergio has done a great job building a lot of financial markdown papers, available here: https://rpubs.com/Sergio_Garcia
+
+## Introduction
+
+An important distinction must be made between the price of a security and the value of a security. The price of a security is the amount of money we pay when we purchase a security or the amount of money we receive when we sell a security. In contrast, the value of a security is how much the security is worth. When there is sufficient trading in a particular security (i.e., markets are efficient), the observed market price of that security can be considered the best estimate of the value of that security.
+
+## Time value of money
+
+### Computing a bond's future value
+
+The future value of \$100 will be more than \$100 because you have to be compensated for the opportunity cost (e.g., interest rate) that you forego by not having that money now (and investing it!). The longer you have to forego being able to use that money, the larger your opportunity cost grows.
+The growth rate of the opportunity cost is compounded, which means the future value of \$100 two years from now is equal to the future value of \$100 one year from now growing at the opportunity cost (i.e., the opportunity cost grows at a compounded rate).
+
+In this exercise, you will calculate the future value of $100 one year from now and two years from now assuming an opportunity cost of 10%.
+```{r fv}
+# Create pv
+pv <- 100
+
+# Create r
+r <- 0.1
+
+# Calculate fv1
+fv1 <- pv * (1 + r)
+
+# Calculate fv2
+fv2 <-  pv * (1 + r)* (1 + r)
+```
+Determining future value based on present value is a relativley simple process if you have all necessary information.
+Computing a bond's present value
+Now that you've calculated future value from present value, it should be trivial to reverse the process.
+
+If you expect to receive \$100 one year from now, the present value of that \$100 will be less today (because you prefer to have the money sooner than later). Moreover, if we expect to receive \$100 two years from now, the value of that will be less than the present value of \$100 one year now.
+
+In this exercise, you will calculate the present value of fv1 and fv2 assuming an r (interest rate) of 0.10, where fv1 is a future value one year from now and fv2 is a future value two years from now.
+```{r discount}
+# Calculate pv1
+pv1 <- fv1 / (1 + r)
+
+# Calculate pv2
+pv2 <- fv2 / ((1 + r) * (1 + r))
+
+# Print pv1 and pv2
+print(pv1)
+print(pv2)
+```
+Calculating present value from future value (and vice-versa) is relatively trivial using basic mathematical operations in R. As you can see, you're right back where you started: $100!
+## Bond valuation
+
+### Laying out the bond's cash flows
+
+In the next set of exercises, you'll build a cash flow data frame.
+Suppose you are considering investing in a bond that has a \$100 par value, 5% coupon rate, and 5 years to maturity. The coupon rate is the interest that you earn from holding the bond, so prior to the bond's maturity you would receive \$5 of coupon payments each year. At maturity, you will also receive the \$100 par value back.
+
+In this exercise, you will create a vector cf that lays out this bond's cash flows. You will then convert this vector into a data frame, so you can add additional columns of data required in subsequent analyses.
+```{r cashflows}
+# Create vector of cash flows
+cf <- c(5, 5, 5, 5, 105)
+
+# Convert to data frame
+cf <- data.frame(cf)
+cf
+```
+This very basic cf object represents the first step towards a more robust bond valuation model.
+
+### Discounting bond cash flows with a known yield
+
+After laying out the bond's cash flows, we can now go through the steps of calculating the present value of each cash flow and value the bond. Recall that the value of the bond is the sum of the present value of its cash flows.
+
+In this exercise, you will calculate the appropriate present value factor, pv_factor, for each cash flow, so we can calculate each cash flow's present value pv. You will then sum the pv to find the value of the bond.
+
+Recall that this bond has a yield of 6%, which acts as the discount rate.
+```{r pvcashflow}
+# Add column t to cf
+cf$t <- as.numeric(c(1, 2, 3, 4, 5))
+
+# Calculate pv_factor
+cf$pv_factor <- 1 / (1 + 0.06)^cf$t
+
+# Calculate pv
+cf$pv <- cf$cf * cf$pv_factor
+
+# Calculate the bond price
+sum(cf$pv)
+```
+Calculating bond price using data frames in R allows you to keep track of a handful of complex variables. In this case, the overall bond price should be set at about $96.
+
+## Convert your code into a function
+
+### Convert your code into a bond valuation function
+
+In the prior exercises, you worked through in a step-by-step fashion how to calculate the value of a bond. However, performing all those steps repeatedly to value many bonds will be cumbersome. Fortunately, you can create a function to perform those same calculations repeatedly for different bonds.
+
+The function you create must have the flexibility to allow you to input key features of the bond. Specific to our prior example, you'll need the function to be able to incorporate a bond's par value, coupon rate, time to maturity, and yield.
+
+In this exercise, you'll create the function bondprc that takes these four inputs to calculate the value of a bond. Recall that to create a function you can use 
+
+    function(input 1, input 2, ...) { [lines of code] }
+    
+bondprc, function() with four inputs: p for par value, r for coupon rate, ttm for time to maturity, and y for yield.
+```{r}
+# Create function
+bondprc <- function(p, r, ttm, y) {
+  cf <- c(rep(p * r, ttm - 1), p * (1 + r))
+  cf <- data.frame(cf)
+  cf$t <- as.numeric(rownames(cf))
+  cf$pv_factor <- 1 / (1 + y)^cf$t
+  cf$pv <- cf$cf * cf$pv_factor
+  sum(cf$pv)
+}
+
+# Verify prior result
+bondprc(100, 0.05, 5, 0.06)
+```
+Although it is important to walk through each step in the process to understand how to calculate bond prices, you should always attempt to create an appropriate function when faced with a complex and repetitive calculation.
+
+# Yield to Maturity
+
+## Price-yield relationship
+
+### The yield on the Moody's Baa index
+
+In the previous chapter, you valued a bond with a $100 par value, 5% coupon rate, and 5 years to maturity. You then assumed a yield to maturity of 6% for that bond. Recall from the video that a bond's yield can be estimated by looking at the yield of comparable bonds.
+
+In this exercise, you'll assume that the bond you valued has a Baa credit rating by Moody's and the bond will be issued on September 30, 2022 With this information, you can use the alfred() package in R to obtain the yield of the Moody's Baa index (use the ticker "DBAA") on September 30, 2022.
+```{r aaayield}
+# Load alfred  package to acess data
+library(alfred)
+
+# Obtain Moody's Baa index data
+baa <- get_fred_series(series_id = "DBAA",series_name="Value",observation_start = "2000-01-01")
+
+# Identify 9/30/16 yield
+baa_yield <- subset(baa, baa$date == "2022-09-30")
+
+# Convert yield to decimals and view
+baa_yield <- baa_yield$Value / 100
+baa_yield
+```
+It looks like the yield on Moody's Baa index on September 30, 2022 was about 6.07%, or 0.0607 In the next exercise, you'll use this yield to determine the value of your bond.
+
+### Value the 3% bond using the Baa yield you found
+
+From the prior exercise, you found that the yield on comparable bonds is 4.29%.
+
+Now that you know the yield, you can use this information to find the value of a Baa-rated bond on September 30, 2022 with a $100 par value, 5% coupon rate, and 5 years to maturity.
+```{r}
+# Value bond
+bondprc(p = 100, r = 0.05, ttm = 5, y = baa_yield)
+```
+Your calculations suggest that the bond is valued at approximately \$95.5 despite its par value being only \$100.
+
+### Plotting the price/yield relationship
+
+Although there is an inverse relationship between price and yield, this relationship is not linear. This means that changes in price due to change in yield could differ substantially depending on whether the yield goes up or down. We will revisit this important concept when we discuss the concept of convexity in Chapter Three and how an adjustment is necessary to account for this curved relationship between a bond's price and yield. For now, just keep in mind that this inverse relationship is non-linear.
+
+In this exercise, you will assume that you have a bond with $100 par value, 10% coupon rate, and 20 years to maturity. Note that this is different from the bond you've been working with to this point! Your goal is to value this bond at different levels of yield using your bondprc() function.
+```{r prc_yld}
+# Generate prc_yld
+prc_yld <- seq(0.02, 0.40, 0.01)
+
+# Convert prc_yld to data frame
+prc_yld <- data.frame(prc_yld)
+
+# Calculate bond price given different yields
+for (i in 1:nrow(prc_yld)) {
+     prc_yld$price[i] <- bondprc(100, 0.10, 20, prc_yld$prc_yld[i])  
+}
+
+# Plot P/YTM relationship
+plot(prc_yld,
+     type = "l",
+     col = "blue",
+     main = "Price/YTM Relationship")
+```
+Your plot shows a clear inverse relationship betwen price and prc_yld (or yield).
+
+## Components of yield
+
+### Risk-free yield
+
+The yield is comprised of the risk-free rate as well as the spread, which is designed to compensate investors for taking on risk.
+
+### Plotting US Treasury yields
+
+Since corporate bonds are riskier than US Treasuries, the risk-free rate is the baseline rate we would expect corporate bonds to yield. However, US Treasury yields are not constant and could change substantially through time. We can see this by plotting the US Treasury yield data over a long period.
+
+In this exercise, you will use the quantmod() package to obtain and plot 10-Year US Treasury yield data from the Federal Reserve Electronic Database (FRED) from January 2006 to November 2022.
+
+Access the FRED database by specifying the Symbols argument (in this case, to "DGS10" for 10-Year US Treasury Bonds). 
+```{r}
+# Obtain Treasury yield data
+t10yr <- get_fred_series(series_id = "DGS10" )
+
+
+# Plot yields
+plot(x = t10yr$date,
+     y = t10yr$DGS10,
+     xlab = "Date",
+     ylab = "Yield (%)",
+     type = "l",
+     col = "red",
+     main = "10-Year US Treasury Yields")
+```
+### Plotting the investment grade spread
+
+Aside from the risk-free rate changing through time, another determinant of the corporate bond yield is the size of the credit spread, which also changes through time. One way to observe this spread is to compare the yield on the highest rated investment grade bonds (Aaa rating) and the yield on the lowest investment grade bonds (Baa rating).
+
+The investment grade (IG) spread can be viewed as the market's perception of how risky investing in bonds is at a certain point in time. The larger the IG spread, the more compensation investors demand for investing in riskier bonds.
+
+In this exercise, you will plot the investment grade (IG) spread from January 2006 to the present The object spread contains the Aaa and Baa yields (generated using the Quandl package).
+```{r}
+aaa <- get_fred_series(series_id = "DAAA", observation_start = "2000-01-01")
+```
+
+```{r corpspd1}
+library(tidyr)
+library(dplyr)
+aaa <- aaa %>% 
+  filter(date >= "2006-01-01")
+baa <- baa %>% 
+  filter(date >= "2006-01-01")
+
+spread <- merge(aaa, baa, by="date")
+colnames(spread) <- c("date", "aaa", "baa")
+```
+
+```{r corpspd2}
+# Examine first and last six elements in spread
+head(spread)
+tail(spread)
+
+# Calculate spread$diff
+spread$diff <- (spread$baa - spread$aaa) * 100
+
+# Plot spread
+plot(x = spread$date,
+     y = spread$diff,
+     type = "l",
+     xlab = "Date",
+     ylab = "Spread (bps)",
+     col = "red",
+     main = "Baa - Aaa Spread")
+```
+As you can see, the Aaa-Baa spread varies considerably over time, and was especially high during the global financial crisis in the late-2000s.
+
+## Estimating the yield of a bond
+
+Finding a bond's yield
+Suppose someone is offering \$95.79 to purchase a bond you own with a \$100 par value, 5% coupon rate, and 5 years to maturity. In this situation, you would like to know what the yield is of that bond, so you can compare the yield to the yield of other comparable securities to know whether the price being offered is too high or too low.
+
+One way to find the yield is by trial-and-error. You first start with an initial guess, say 5% and find the price given a 5% yield. If the resulting price is too high, you know due to the inverse relationship between price and yield that your next guess has to be a higher yield.
+
+Suppose your next guess is a yield of 7%. That will result in a price that is too low, which means that the yield is higher than 5% but lower than 7%. So, you now pick a yield of 6%, which will give you the correct answer.
+
+In this exercise, you will calculate the price using a 5%, 6%, and 7% yield using your bondprc() function, which is preloaded in the workspace. Remember that the goal is to reverse engineer bond characteristics valued at $95.79.
+```{r bondprc}
+# Value bond using 5% yield
+bondprc(p = 100, r = 0.05, ttm = 5, y = 0.05)
+
+# Value bond using 7% yield
+bondprc(p = 100, r = 0.05, ttm = 5, y = 0.07)
+
+# Value bond using 6% yield
+bondprc(p = 100, r = 0.05, ttm = 5, y = 0.06)
+```
+By guessing upper and lower bounds, you were able to triangulate the correct yield of 6%. In the next exercise, you'll make this process a bit easier by coding a new function to calculate yield for you!
+
+### Use uniroot function to find YTM
+
+Trial-and-error is a very cumbersome process. An alternative is to use an algorithm that does the work for you. In this particular case, the solution to the problem is the same as finding the root of a function.
+
+In this exercise, you will use the unrioot() function to find the root.
+
+The uniroot() function requires us to setup a vector of cash flows, cf, that begins with the price of the bond (as a negative number) as the first element and the cash flows you expect to receive from the bond (i.e., coupon and principal payments) as the remaining elements.
+
+Recall that the price of the bond is \$95.79 and the bond has a \$100 par value, 5% coupon rate, and 5 years to maturity.
+```{r uniroot}
+# Create cash flow vector
+cf <- c(-95.79, 5, 5, 5, 5, 105)
+
+# Create bond valuation function
+bval <- function(i, cf,
+     t=seq(along = cf))
+     sum(cf / (1 + i)^t)
+
+# Create ytm() function using uniroot
+ytm <- function(cf) {
+    uniroot(bval, c(0, 1), cf = cf)$root
+}
+
+# Use ytm() function to find yield
+ytm(cf)
+```
+
+Your custom ytm() function produced an output of approximately 0.06, representing a 6% yield. Now that you've created the necessary functions, this estimation process will be much easier in the future.
+
+# Duration and Convexity
+
+## Bond price volatility and the price value of a basis point
+
+### Price value of a basis point
+
+You can also refer to a basis point as an 01, because it represents 0.01%. You'll sometimes encounter the phrase PV01.
+
+### Calculate PV01 of a 10% bond
+
+You can calculate the PV01 by calculating the value of a bond and the value of the same bond with a one basis point change in yield. In this exercise, you will calculate the PV01 of a bond with a $100 par value, 10% coupon, and 20 years to maturity assuming 10% yield to maturity.
+
+Use the bondprc() function to value the two bonds.
+```{r PV01}
+# Calculate the PV01
+PV01 <- abs(bondprc(100, 0.10, 20, 0.1001) - bondprc(100, 0.10, 20, 0.10))
+PV01
+```
+You have now calculated the present value of a basis point for this bond.
+
+## Duration
+
+Duration can sometimes be thought of as the weighted-average time to maturity of the bond. Because of interim cash flows, the duration of a coupon bond is less than its time to maturity.
+
+Without a coupon to adjust for, the duration would equal the regular maturity (Zero coupond bonds).
+
+### Calculate approximate duration for a bond
+
+A useful approximation of the duration formula is called the approximate duration, which is given by
+
+$(P(down)−P(up))/(2∗P∗Δy)$
+
+where P is the price of the bond, P(down) is the price of the bond if yield decreases, P(up) is the price of the bond if yield increases, and Δy is the expected change in yield.
+
+The full duration formula is more complex. 
+
+In this exercise, you will calculate the approximate duration of a bond with $100 par value, 10% coupon rate, 20 years to maturity, 10% yield to maturity, and a 1% expected change in yield. To make this calculation, use your familiar bondprc() function.
+```{r duration}
+# Calculate bond price today
+px <- bondprc(p = 100, r = 0.1, ttm = 20, y = 0.1)
+px
+
+# Calculate bond price if yields increase by 1%
+px_up <- bondprc(p = 100, r = 0.1, ttm = 20, y = 0.11)
+px_up
+
+# Calculate bond price if yields decrease by 1%
+px_down <- bondprc(p = 100, r = 0.1, ttm = 20, y = 0.09)
+px_down
+
+# Calculate approximate duration
+duration <- (px_down - px_up) / (2 * px * 0.01)
+duration
+```
+This formula provides a simple way to estimate duration without getting into the nitty-gritty of the full duration formula.
+
+### Estimating effect on bond price using duration
+
+When we know a bond's duration, we can come up with an estimate of the bond's price assuming some expected change in yield.
+
+In this exercise, assume yields are expected to decrease by 1%, what is the estimated percentage change in price and dollar change in price due to duration. The object px, which denotes the price of this bond, is $100 and the bond's duration is 8.545937. To calculate the percentage change using duration, recall the formula:
+
+$−D∗Δy$
+
+where D is the duration and Δy is the change in yield.
+
+To calculate the dollar change using duration, recall that you multiply the percentage change by the current price.
+```{r durchg}
+# Estimate percentage change
+duration_pct_change <- - duration * -0.01
+duration_pct_change
+
+# Estimate dollar change
+duration_dollar_change <- duration_pct_change * px
+duration_dollar_change
+```
+## Convexity
+
+### Calculate approximate convexity for a bond
+
+We can improve the estimate of the bond price by adding a convexity term to the duration effect. The convexity term accounts for how bowed the price/YTM curve is for the bond.
+
+In this exercise, you will calculate the approximate convexity for a bond with $100 par value, 10% coupon, 20 years to maturity, and 10% yield to maturity when you expect a 1% change in yield and add that to the duration effect. Recall that the approximate convexity formula is
+
+$(P(up)+P(down)−2∗P)/(P∗Δy2)$
+
+where P is the price of the bond, P(up) is the price of the bond when yields increase, P(down) is the price of the bond when yields decrease, and Δy is the expected change in yield.
+```{r convexity}
+# Calculate approximate convexity
+convexity <- (px_up + px_down - 2 * px) / (px * (0.01)^2)
+convexity
+```
+Measuring convexity will dramatically improve your overall estimate of bond price.
+
+### Estimating effect of convexity on bond price
+
+Now that you've calculated convexity for your bond, you can estimate the effect of convexity on the bond's price.
+
+Specifically, recall from the video that the percentage change based on convexity is given by
+
+$0.5∗convexity∗(Δy)^2$
+
+where Δy is the expected change in yield. The dollar change based on convexity is equal to the percentage change multiplied by the current price P.
+
+For this exercise, assume that yields are expected to decline by 1%.
+
+The convexity object, which you calculated in the previous exercise as 116.521, and the px object, which is the price of the bond of $100, have been preloaded in your workspace.
+```{r convexPV}
+# Estimate percentage change
+convexity_pct_change <- 0.5 * convexity * (0.01)^2
+convexity_pct_change
+
+# Estimate dollar change
+convexity_dollar_change <- convexity_pct_change * px
+convexity_dollar_change
+```
+While the dollar change due to convexity in this case is relatively small, it is important to control for in your overall estimation.
+
+### Estimating the bond price using duration and convexity
+
+In an earlier exercise, you calculated the dollar change due to duration of 8.5459 and convexity of 0.5826. You stored these two values in duration_dollar_change and convexity_dollar_change, respectively.
+
+Recall that the price of the bond is $100, which is stored in the object px. In this exercise, you will be asked to calculate the estimated change in price based on duration and convexity and calculate the estimated new price of the bond when yields decrease by 1%.
+
+Suppose you know that the bond's duration leads to a price effect of 8.5459, which we will store in the object duration_dollar_change. Suppose we also know that the bond's convexity leads to a price effect of 0.5826, which we will store in the object convexity_dollar_change.
+
+you will add the duration and convexity effects to arrive at the estimated bond price.
+```{r chgdurconv}
+# Estimate change in price
+price_change <- duration_dollar_change + convexity_dollar_change
+price_change
+# Estimate price
+price <- px + duration_dollar_change + convexity_dollar_change
+price
+```
+# Comprehensive Example
+
+## Bond valuation
+
+### Find AAA bond yields as of September 30, 2022
+
+In this comprehensive example, you will value a bond with a $100 par value, 3% coupon rate, and 8 years to maturity. This bond was rated Aaa by Moody's and it was issued on September 30, 2012. You have determined that this bond's yield is comparable to the yield of bonds with a Aaa rating.
+
+In this exercise, use the get_fred_series() command (from the alfred package) to obtain the yield of Moody's Aaa index on September 30, 2022 and store that value in an object labeled aaa_yield.
+```{r getaaa}
+
+aaa <- get_fred_series(series_id = "DAAA",series_name="Value",observation_start = "2000-01-01")
+
+# Identify 9/30/16 yield
+aaa_yield <- subset(aaa, aaa$date == "2022-09-30")
+
+# Convert yield into decimals
+aaa_yield <- aaa_yield$Value / 100
+aaa_yield
+
+```
+Evaluating yield by comparing to other bond rates is simpe using the Quandl package.
+
+### Valuation
+
+You will value a bond with a $100 par value, 3% coupon rate, and 8 years to maturity. You will layout the bond's cash flows and calculate the present value of each of those cash flows using the Aaa yield
+```{r pvcashflow2}
+# Layout the bond's cash flows
+cf <- c(3, 3, 3, 3, 3, 3, 3, 103)
+
+# Convert to data.frame
+cf <-data.frame(cf)
+
+# Add time indicator
+cf$t <- seq(from = 1, to = 8, by = 1)
+
+# Calculate PV factor
+cf$pv_factor <- 1 / (1 + aaa_yield)^cf$t
+
+# Calculate PV
+cf$pv <- cf$cf * cf$pv_factor
+
+# Price bond
+sum(cf$pv)
+px <- bondprc(p = 100, r = 0.03, ttm = 8, y = aaa_yield)
+px
+```
+Although complex, mastering this series of calculations is integral to understanding how bond prices are determined in the absence of widespread trading.
+
+### Alternative cash flow vector code
+
+You may have coded the cash flow vector by writing cf <- c(3, 3, 3, 3, 3, 3, 3, 103).
+
+However, this may seem a bit tedious. An alternative is to code the cash flow vector using the rep() command. Typing rep(x, y) will automatically repeat x y times. For example, rep(1, 4) is equivalent to typing c(1, 1, 1, 1).
+
+In this exercise, you'll construct a more general function for computing a cash flow vector based on a series of inputs: r for coupon rate, p for par value, and ttm for time to maturity. To do so, you'll take advantage of the rep() command.
+```{r cffunc}
+# Code cash flow function
+alt_cf <- function(r, p, ttm) {
+  c(rep(p * r, ttm - 1), p * (1 + r))
+}
+
+# Generate cf vector
+alt_cf(r = 0.03, p = 100, ttm = 8)
+```
+## Duration and convexity
+
+### Calculate duration
+
+you learned to use the approximate duration formula. As a refresher, the formula for approximate duration is:
+
+$(P(down)−P(up))/(2∗P∗Δy)$
+
+where P is the price of the bond today, P(up) is the price of the bond if yields increase, P(down) is the price of the bond if yields decrease, and Δy is the expected change in yield.
+
+In this exercise, you will calculate duration. Specifically, you'll use the bondprc() function to calculate px_up and px_down.
+
+The objects px and aaa_yield from the prior exercises are preloaded in your workspace. For this exercise, assume that the expected change in yield is an increase of 1%. As before, the coupon rate is 3% (0.03) and the time to maturity 8 years.
+```{r aaadur}
+# Calculate bond price when yield increases
+px_up <- bondprc(p = 100, r = 0.03, ttm = 8, y = aaa_yield + 0.01)
+
+# Calculate bond price when yield decreases
+px_down <- bondprc(p = 100, r = 0.03, ttm = 8, y = aaa_yield - 0.01)
+
+# Calculate duration
+duration <- (px_down - px_up) / (2 * px * 0.01)
+
+# Calculate percentage effect of duration on price
+duration_pct_change <- - duration * (0.01)
+duration_pct_change
+
+# Calculate dollar effect of duration on price
+duration_dollar_change <- duration_pct_change * px
+duration_dollar_change
+```
+You derived several important values, including duration itself, the percentage effect of duration on price and the dollar effect of duration on price, based on relatively few inputs.
+
+### Calculate convexity measure
+
+Duration does not adequately adjust for the convex nature of the relationship between price and yield. To improve the estimate of the bond price based on duration, we can add a term based on the convexity measure.
+
+The approximate formula for convexity is:
+
+$(P(up)+P(down)−2∗P)/(P∗Δy2)$
+
+where P is the price of the bond, P(up) is the price of the bond when yields increase, P(down) is the price of the bond when yields decrease, and Δy is the expected change in yield.
+```{r aaaconv}
+# Calculate convexity measure
+convexity <- (px_up + px_down - 2 * px) / (px * (0.01)^2)
+
+# Calculate percentage effect of convexity on price
+convexity_pct_change <- 0.5 * convexity * (0.01)^2
+convexity_pct_change
+
+# Calculate dollar effect of convexity on price
+convexity_dollar_change <- convexity_pct_change * px
+convexity_dollar_change
+```
+--
+Once again, you've calculated a series of important values (convexity, percentage effect of convexity, and dollar effect of convexity) based on a small number of inputs.
+
+### The estimated price change using duration and convexity
+
+In the prior exercises, you estimated that if yields increase by 1%, you can expect a dollar effect due to duration of -5.993 and dollar effect due to convexity of 0.2474.
+
+You also know that the bond has a current price of $87.61, which is stored in the workspace as the object px.
+
+Accurate price estimations should take into account both duration and convexity. In this exercise, you will be asked to calculate the estimated change in the price based on duration and convexity. You'll then calculate the new estimated price assuming a 1% increase in yields.
+```{r aaaprc}
+# Estimate price_change
+price_change <- duration_dollar_change + convexity_dollar_change
+price_change
+
+# Estimate new_price
+new_price <- px + duration_dollar_change + convexity_dollar_change
+new_price
+```
+

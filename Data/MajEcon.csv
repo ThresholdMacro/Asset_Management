@@ -1,0 +1,14 @@
+﻿Indicator,Short_name,Origin,Provider,Dataset,Series,Source,Type
+Global PMI,Global_PMI,IHS Markit and JPMorgan Chase,,,,,
+U.S. Employment,US_Unemploy,BLS,BLS,ce,CES0000000001,db.nomics.world,Level
+U.S. Consumer Spending,US_Cons_Spend,BEA,BEA,NIUnderlyingDetail-U20305,DPCMRC-M,db.nomics.world,Level
+U.S. Personal Consumption Expenditure,US_PCE,BEA,BEA,NIUnderlyingDetail-U20304,DPCMRG-M,db.nomics.world,Level
+Brazil GDP,Brazil_GDP,IBGE,OECD,MEI,BRA.LORSGPOR.GYSA.Q,db.nomics.world,yoy
+Chile Copper Exports,Chile_HG_Exp,Banco Central de Chile,Spreadsheet,ChileCopperExportsTons.xlsx,,https://si3.bcentral.cl/Siete/ES/Siete/Cuadro/CAP_IND_SEC/MN_IND_SEC20/IS_MIN2/IS22,Level
+Euro-area inflation,EZ_HICP,Eurostat,Eurostat,prc_hicp_midx,M.I05.CP00.EA,db.nomics.world,Level
+German IFO,IFO,IFO institute ( Institut fuer Wirtschaftsforschung),Spreadsheet,IFO11_2022.xlsx,,https://www.ifo.de/en/ifo-time-series,Index
+China Manufacturing Confidence (IMF),China_Manu_Conf,China Federation of Logistics and Purchasing,IMF,PGI,M.CN.ACB_100_SA_IX,db.nomics.world,Index
+China PPI,China_PPI,National Bureau of Statistics of China,NBS,M_A010801,A01080101,db.nomics.world,yoy
+China PPI (OECD),China_PPI_OECD,OECD,OECD,MEI,CHN.PIEATI01.GY.M,db.nomics.world,yoy
+Japanese Inflation,Japan_CPI,Ministry of Internal Affairs and Communications,STATJP,CPIm,001,db.nomics.world,Level
+South Korea Exports,Korea_Exportsyoy,"Ministry of Trade, Industry and Energy",OECD,MEI,KOR.XTEXVA01.GYSA.M,db.nomics.world,Level

@@ -47,10 +47,10 @@ monthly_stock_returns <- function(ticker, start_year) {
   symbol <- getSymbols(ticker, src = 'yahoo', 
                        auto.assign = FALSE, warnings = FALSE)
   
-  # Tranform it to monthly returns using quantmode::periodReturn
+ # Tranform it to monthly returns using quantmode::periodReturn
   data <- periodReturn(symbol, period = 'monthly', 
                        subset=paste(start_year, "::", sep = ""),
-                       type = 'log')
+                       type = 'log') 
   
   # Let's rename the column of returns to something intuitive because
   # the column name is what will eventually be displayed
@@ -63,7 +63,7 @@ monthly_stock_returns <- function(ticker, start_year) {
 ## ---------------------------
 
 # Choose the starting year and assign it to the 'year' variable
-year <- 2000
+year <- 2007
 
 # Use the function the monthly returns on 3 stocks, and pass in the 'year'
 # value. Let's choose Google, JP Morgan and Amazon

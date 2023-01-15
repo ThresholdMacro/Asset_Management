@@ -110,12 +110,11 @@ ChileCopperExp$BBG <- ChileCopperExp$`Exportaciones mes`*ChileCopperExp$`Copper 
 colnames(ChileCopperExp)[1] <- 'period'
 ChileCopperExp <- ChileCopperExp %>% filter(period >= '2003-01-01')
 
+colnames(EZ_HICP)[2] <- 'HICP'
 EZ_HICP$BBG <- 0
 EZ_HICP$BBG[13:nrow(EZ_HICP)] <-
   diff(
-    log(
-      EZ_HICP$`Monthly – Index, 2005=100 – All-items HICP – Euro area (EA11-1999, EA12-2001, EA13-2007, EA15-2008, EA16-2009, EA17-2011, EA18-2014, EA19-2015)`
-    ),
+    log(EZ_HICP$HICP),
     12
   )
 EZ_HICP <- EZ_HICP %>% filter(period >= '2003-01-01')

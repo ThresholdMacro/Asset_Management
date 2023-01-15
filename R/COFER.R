@@ -30,7 +30,7 @@ library(lubridate)
 library(ggplot2)
 library(ggthemes)
 library(readr)
-library(IMFData)
+# library(IMFData)
 library(rdbnomics)
 # source("functions/packages.R")       # loads up all the packages we need
 
@@ -78,7 +78,7 @@ df4 <- rdb("IMF","COFER","Q.W00.")
  
 df <-
 df4 %>%
-select(period,value,series=series_name) %>%
+dplyr::select(period,value,series=series_name) %>%
 filter(year(period)>="1998-01-01") 
 df <-pivot_wider(df, id_cols = 'period' ,names_from = "series", values_from = 'value')
 

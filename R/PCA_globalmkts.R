@@ -57,8 +57,8 @@ last_day_prev_year <- function(x) floor_date(x, "year") - days(1)
 tset <- FALSE
 df<-read.csv("Data/dailyFWk1312.csv")
 df$period <- as.Date(dmy(df$period))
-end2021 <- last_day_prev_year(Sys.Date())
-enddate <- match(end2021,df$period)-1
+end_year <- last_day_prev_year(as.Date("2022-12-01"))
+enddate <- match(end_year,df$period)-1
 
 trainingset <- df[1:enddate,]
 

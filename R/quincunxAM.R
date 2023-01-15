@@ -64,7 +64,7 @@ quincunxAM <- function (n = 10, numballs = 200, delay = 0.3, probright = 0.5,
                   s)
       lines(x[path], y[path], lty = 2)
       h <- barplot(tbl, ylim = c(0, round(numballs/2.8)), 
-                   xlab = "Number of Rightward Bounces")
+                   xlab = "Number of Rightward Bounces", col='green')
       if (delay > 0) 
         Sys.sleep(delay)
       if (delay < 0) 

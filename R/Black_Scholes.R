@@ -176,6 +176,9 @@ pr <- seq(from=100*0.75, to=100*1.25, by=0.1)
 cv <- Black_Scholes(S = pr, T=1)
 pv <- Black_Scholes(S = pr,T=1,type="P")
 
+max(cv)
+
+
 rf <- K-(pr-(cv-pv))
 
 p3<- ggplot(data.frame(pr, cv, pv,rf), aes(x = pr)) +
@@ -183,6 +186,7 @@ p3<- ggplot(data.frame(pr, cv, pv,rf), aes(x = pr)) +
   geom_line(aes(y = pv, color = "Put")) +
   geom_line(aes(y = rf, color = "Strike-(Price-(c - p))")) +
   scale_color_manual(values=c("red", "blue","green")) +
+  scale_y_continuous(limits = c(0, 40), breaks = 0:4 * 10)+
   labs(title = "Price of options at T=1", 
        color = "", y = "Option Price", x = "Stock Price")
 

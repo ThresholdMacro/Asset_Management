@@ -29,11 +29,14 @@ library(PerformanceAnalytics)
 library(imputeTS)
 library(PortfolioAnalytics)
 library(ggplot2)
+library(dygraphs)
 # source("functions/packages.R")       # loads up all the packages we need
 
 ## ---------------------------
 
 ## load up our functions into memory
+source("R/ggstdplots.R")
+
 # Function to calculate monthly returns on a stock
 monthly_stock_returns <- function(ticker, start_year) {
   
@@ -91,8 +94,8 @@ portfolio_monthly_returns <- Return.portfolio(merged_returns, weights = w)
 dygraph(portfolio_monthly_returns, main = "Portfolio Monthly Return") %>%
   dyAxis("y", label = "%")
 
-par(bg = "blue") # Color
-charts.PerformanceSummary(portfolio_monthly_returns)
+#par(bg = "blue") # Color
+p <- gg.charts.PerformanceSummary2(portfolio_monthly_returns, main="Portfolio performance", xaxis_date_breaks = "3 years")
 
 #Calculate Metrics 
 CAPM.beta(portfolio_monthly_returns, benchmark_monthly_returns, .035/12)

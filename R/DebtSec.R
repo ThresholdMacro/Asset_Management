@@ -254,6 +254,9 @@ recessions.trim = subset(recessions, Peak >= min(lngeurobondsGDP$date) )
 p <- p +
   geom_rect(data = recessions.trim,
             aes(xmin = Peak, xmax = Trough, ymin = -Inf, ymax = Inf),
-            fill = "grey", alpha = 0.5,
+            fill = "gray", alpha = 0.5,
             inherit.aes = FALSE)
+
+# source("~/Library/Mobile Documents/com~apple~CloudDocs/Meyrick/R/Scripts/ggstdplots.R")
+
 p

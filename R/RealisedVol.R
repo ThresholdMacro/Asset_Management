@@ -63,7 +63,7 @@ daily_stock_returns <- function(ticker, start_year) {
   symbol <- getSymbols(ticker, src = 'yahoo', 
                        auto.assign = FALSE, warnings = FALSE)
   
-  # Tranform it to monthly returns using quantmode::periodReturn
+  # Tranform it to monthly returns using quantmod::periodReturn
   data <- periodReturn(symbol, period = 'daily', 
                        subset=paste(start_year, "::", sep = ""),
                        type = 'log') 

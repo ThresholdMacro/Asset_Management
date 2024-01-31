@@ -95,51 +95,59 @@ p+ annotate("text", x = 120, y = 1,
 
 # Section II, a fanciful (non-serious) estimation of probability of hitting lower bound of Excess Reserves at the Fed. 
 # Below that limit nasty things are expected to happen
-V <- 3160 # System reserves in Fed balance sheet at beginning of June 2022, when QT began
-D <- 2080 # Estimated lower bound
-r <- (-0.36) #expected decline in reserves over next year = 3*45+9*90 = 1140 = 36% of starting level
+V <- 4130 # System reserves in Fed balance sheet at beginning of June 2022, when QT began
+K <- 3000 # Estimated lower bound
+r <- (-0.27) #expected decline in reserves over next year = 3*45+9*90 = 1140 = 36% of starting level
 T <- 1.0 # Time in years (1 period)
-sigma <- 0.04 #Volatility
+sigma <- 0.12 #Volatility
 
 #Current distance to default is ln(Firm value/Debt)
-DD <- log(V/D)
+DD <- log(V/K)
 # so what is the probability of hitting the strike? 
 # create variable first
-DD1 <- d2(S=3160,K=2020,r=(-.36),T=1,sigma=0.04)
+DD1 <- d2(S=V,K=K,r=(r),T=T,sigma=sigma)
 
 pnorm(DD1)
 
-D <- seq(from=1500, to=3000, by=10)
-DD1 <- d2(S=3160,D,r=(-.36),T=1,sigma=0.04)
+D <- seq(from=1500, to=4130, by=10)
+DD1 <- d2(S=V,K=K,r=(r),T=T,sigma=sigma)
 pnorm(-DD1)
 
-startQT <- 3160 # most recent level of Reserves, November 2022
-plannedQT <- 3160-1140 # at $95 bln per month = 1140 bln per year
-Res <- seq(from=plannedQT, to=startQT, by=10)
+startQT <- 4189 # V # most recent level of Reserves, November 2022
+plannedQT <- 2360
+  # V-1140 # at $95 bln per month = 1140 bln per year
+Res <- seq(from=plannedQT, to=startQT, length.out = 211)
 
 # Lower bound of System Reserves = 2500, and other levels ($1390 was the level in September 2019 when repo had a funny turn)
-pd <- pnorm(-d2(S=Res,K=2200,r=(-0.36),T=1,sigma=0.15))
-pd1 <- pnorm(-d2(S=Res,K=2000,r=(-0.36),T=1,sigma=0.15))
-pd2 <- pnorm(-d2(S=Res,K=1800,r=(-0.36),T=1,sigma=0.15))
-pd3 <- pnorm(-d2(S=Res,K=1390,r=(-0.36),T=1,sigma=0.15))
+pd <- pnorm(-d2(S=Res,K=K,r=(r),T=T,sigma=sigma))
+pd1 <- pnorm(-d2(S=Res,K=2500,r=(-0.36),T=1,sigma=sigma))
+pd2 <- pnorm(-d2(S=Res,K=2000,r=(-0.36),T=1,sigma=sigma))
+pd3 <- pnorm(-d2(S=Res,K=1500,r=(-0.36),T=1,sigma=sigma))
 
 
-p1<- ggplot(data.frame(Res, pd,  pd2, pd3), aes(x = Res)) +
-  geom_line(aes(y = pd, color = "Lower bound $2.2 trillion"))+
-  geom_line(aes(y = pd2, color = "Lower bound $1.8 trillion"))+
-  geom_line(aes(y = pd3, color = "Lower bound $1.4 trillion"))+
-  scale_color_manual(values=c("red", "blue", "green")) +
-  labs(title = "Lower bound of reserves in 1 year: Merton Model estimates", 
+p1<- ggplot(data.frame(Res, pd, pd1, pd2), aes(x = Res)) +
+  geom_line(aes(y = pd, color = "Lower bound $3.0 trillion"))+
+  geom_line(aes(y = pd1, color = "Lower bound $2.5 trillion"))+
+  geom_line(aes(y = pd2, color = "Lower bound $2.0 trillion"))+
+  scale_color_manual(values=c("yellow","red", "blue", "green")) +
+  labs(title = "Reserves + ONRRP: lower bound of reserves in 1 year: Merton Model estimates", 
+       caption = 'Source: Federal Reserve, HedgeAnalytics',
        color = "", y = "Probability of breaching lower bound", x = "Current system reserves, $bln")
-p1+ annotate("text", x = 2600, y = 1.2,
-            label = "S=3160, K=variable, r=(-0.36), T=1, sigma=0.15",
-            color = "black", size = 3.5)+
-  annotate("text", x = max(Res), y = pd[length(pd)]+0.01,
-           label = round(pd[length(pd)],2),
-           color = "black", size = 3.5)+
-  annotate("text", x = max(Res), y = pd2[length(pd2)]+0.01,
-           label = round(pd2[length(pd2)],2),
-           color = "black", size = 3.5)
-  
+p1 <-
+  p1 + darktheme + theme(legend.position = 'bottom') + scale_color_HA_qualitative() + scale_y_continuous(limits = c(0, 1), labels = label_percent()) 
+p1+ annotate("text", x = 2850, y = 0.05,
+            label = "Current Reserves + ONRRP = 4130, K=variable, r=(27.5%), T=1, sigma=0.12",
+            color = "white", size = 3.5)+
+  annotate("text", x = max(Res), y = pd[length(pd)]+0.04,
+          label = paste0(round(pd[length(pd)],2)*100,"%"),
+          color = "white", size = 3.5)+
+  annotate("text", x = max(Res), y = pd1[length(pd1)]+0.05,
+           label = paste0(round(pd1[length(pd1)],2)*100,"%"),
+           color = "white", size = 3.5)+
+  annotate("text", x = max(Res), y = pd2[length(pd2)]+0.05,
+           label = paste0(round(pd2[length(pd2)],2)*100,"%"),
+           color = "white", size = 3.5)
+
+# source("~/Library/Mobile Documents/com~apple~CloudDocs/Meyrick/R/Libs/HAgraphics/R/ggstdplots.R")
 
 

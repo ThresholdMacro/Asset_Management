@@ -80,3 +80,6 @@ quincunxAM <- function (n = 10, numballs = 200, delay = 0.3, probright = 0.5,
   if (savedseed) 
     .GlobalEnv$.Random.seed <- oldseed
 }
+
+
+quincunxAM(n=25, numballs = 500, delay = 0.1, probright = 0.5)

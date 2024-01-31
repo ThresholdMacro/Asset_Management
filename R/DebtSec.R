@@ -143,7 +143,7 @@ if(DOWNLOAD == TRUE) {
 
 
 # Get IMF World Economic Outlook estimates of World NGDP in dollars 
-WorldNGDP <- rdb('IMF','WEOAGG:2022-10','001.NGDPD.us_dollars')
+WorldNGDP <- rdb('IMF','WEOAGG:2023-10','001.NGDPD.us_dollars')
 WorldNGDP <- pivot_wider(
   WorldNGDP,
   id_cols = 'period' ,
@@ -152,7 +152,7 @@ WorldNGDP <- pivot_wider(
 )
 
 # Get IMF World Economic Outlook estimates of Advanced Economies NGDP in dollars 
-AdEconNGDP <- rdb('IMF','WEOAGG:2022-10','110.NGDPD.us_dollars')
+AdEconNGDP <- rdb('IMF','WEOAGG:2023-10','110.NGDPD.us_dollars')
 AdEconNGDP <- pivot_wider(
   AdEconNGDP,
   id_cols = 'period' ,
@@ -161,7 +161,7 @@ AdEconNGDP <- pivot_wider(
 )
 
 # Get IMF World Economic Outlook estimates of Emerging and developing economies NGDP in dollars 
-EmEconNGDP <- rdb('IMF','WEOAGG:2022-10','200.NGDPD.us_dollars')
+EmEconNGDP <- rdb('IMF','WEOAGG:2023-10','200.NGDPD.us_dollars')
 EmEconNGDP <- pivot_wider(
   EmEconNGDP,
   id_cols = 'period' ,
@@ -177,8 +177,10 @@ NGDP_All <- df
 
 colnames(NGDP_All)[1] <- 'Date'
 
-NGDP_All$Date <- c(1980:2027)
-rownames(NGDP_All)[1:48] <- seq(1:48)
+nrow(NGDP_All)
+1980+nrow(NGDP_All)-1
+NGDP_All$Date <- c(1980:(1980+nrow(NGDP_All)-1))
+rownames(NGDP_All)[1:(nrow(NGDP_All))] <- seq(1:nrow(NGDP_All))
 
 lngNGDP_All <-
 NGDP_All %>%
@@ -198,7 +200,7 @@ NGDPqtly <-
 NGDPqtly$date <- ceiling_date(NGDPqtly$date, "quarter") - 1
 NGDPqtly <-
   NGDPqtly %>%
-  pivot_wider(c(date), names_from = 'key', values_from = 'int')
+  pivot_wider(id_cols='date', names_from = 'key', values_from = 'int')
 
 All_Issuers_foreign_debtsec$date <-
   ceiling_date(All_Issuers_foreign_debtsec$period, "quarter") - 1
@@ -207,16 +209,19 @@ All_Issuers_foreign_debtsec[, c(2:160)] <-
   All_Issuers_foreign_debtsec[, c(2:160)] / 1000
 
 selectedregions <-
-  select(
-    All_Issuers_foreign_debtsec,
-    date,
+  All_Issuers_foreign_debtsec |>
+  dplyr::select(
+    period,
     `All countries excluding residents`,
     `Developed countries`
   )
+
 colnames(selectedregions) <-
   c("date",
     "Total eurobonds outstanding",
     "Developed countries eurobond outstanding")
+
+selectedregions$date <- as.Date(lubridate::ceiling_date(selectedregions$date, unit = 'quarters')-days(1))
 
 eurobondsGDP <- left_join(NGDPqtly, selectedregions, by = 'date')
 eurobondsGDP$`Emerging countries eurobond outstanding` <-
@@ -229,7 +234,7 @@ eurobondsGDP$`Eurobonds as pct EM GDP` <-
   eurobondsGDP$`Emerging countries eurobond outstanding` / eurobondsGDP$`Emerging market and developing economies`
 
 lngeurobondsGDP <-
-  select(
+  dplyr::select(
     eurobondsGDP,
     date,
     `Eurobonds as pct World GDP`,

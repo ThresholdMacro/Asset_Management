@@ -78,7 +78,7 @@ monthly_stock_returns('^GSPC', 'yahoo',year)
 monthly_stock_returns('CPIAUCSL', 'FRED',year)
 
 #get 1m  Treasury Bill yield
-T1m <- getSymbols("DGS1MO", src = "FRED", auto.assign = FALSE, from = "2012-12-31")
+T1m <- getSymbols("DGS1MO", src = "FRED", auto.assign = FALSE, from = start_date)
 
 T1m <- apply.monthly(T1m,last)
 

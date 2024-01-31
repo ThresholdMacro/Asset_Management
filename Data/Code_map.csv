@@ -1,0 +1,4 @@
+Type,Description,Short_name,Provider_ID,Series_Dataset,Series_Code,Currency
+Liquidity,Foreign debt securities issued Gen Govt,GenGovt_foreign_debtsec,BIS,debtsec,Q..3P.2.1.C.A.F.USD.A.A.A.A.A.I,USD
+Liquidity,Foreign debt securities issued non-fin corps,NonFinCorp_foreign_debtsec,BIS,debtsec,Q..3P.J.1.C.A.A.USD.A.A.A.A.A.I,USD
+Liquidity,Foreign debt securities issued non-fin corps,All_Issuers_foreign_debtsec,BIS,debtsec,Q..3P.1.1.C.A.A.USD.A.A.A.A.A.I,USD

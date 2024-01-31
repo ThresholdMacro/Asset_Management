@@ -97,6 +97,7 @@ dygraph(portfolio_monthly_returns, main = "Portfolio Monthly Return") %>%
 #par(bg = "blue") # Color
 p <- gg.charts.PerformanceSummary2(portfolio_monthly_returns, main="Portfolio performance", xaxis_date_breaks = "3 years")
 
+
 #Calculate Metrics 
 CAPM.beta(portfolio_monthly_returns, benchmark_monthly_returns, .035/12)
 CAPM.beta.bull(portfolio_monthly_returns, benchmark_monthly_returns, .035/12)

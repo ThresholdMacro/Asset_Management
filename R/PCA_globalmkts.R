@@ -209,6 +209,7 @@ for(mkt in 1:ncol(data_used)){
   plot_list2[[names(fittedX[,mkt])]] <- p
 }
 
+
 i <- 1
 for (i in 1:length(plot_list)) {
   file_name = paste0("Output/", names(plot_list[i]), "_returns.tiff")

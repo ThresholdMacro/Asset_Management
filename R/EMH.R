@@ -73,6 +73,7 @@ plot_results <- function(results_df) {
 }
 ## load up our functions into memory
 
+
 ## ---------------------------
 
 startdate <- as.Date("2000-01-01")
@@ -81,10 +82,12 @@ SPY <- getSymbols('^GSPC', src = 'yahoo',auto.assign = FALSE, warnings = FALSE, 
 AMZN<- getSymbols('AMZN', src = 'yahoo',auto.assign = FALSE, warnings = FALSE, from =startdate)
 VIX <- getSymbols('^VIX', src = 'yahoo',auto.assign = FALSE, warnings = FALSE, from =startdate)
 
-SPYresults <- emh::is_random(SPY)
-AMZNresults <- emh::is_random(AMZN)
-VIXresults <- emh::is_random(VIX)
+SPYresults <- emh::is_random(SPY$GSPC.Close)
+AMZNresults <- emh::is_random(AMZN$AMZN.Close)
+VIXresults <- emh::is_random(VIX$VIX.Close)
 
 emh::plot_results(SPYresults)
 emh::plot_results(AMZNresults)
 emh::plot_results(VIXresults)
+
+View(SPYresults)

@@ -18,6 +18,7 @@
 
 ## ---------------------------
 
+
 options(scipen = 6, digits = 4) # I prefer to view outputs in non-scientific notation
 
 ## ---------------------------

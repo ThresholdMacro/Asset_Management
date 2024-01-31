@@ -31,6 +31,7 @@ library(ggplot2)
 library(ggthemes)
 library(readr)
 library(corrplot)
+library(vars)
 # source("functions/packages.R")       # loads up all the packages we need
 
 ## ---------------------------
@@ -70,10 +71,10 @@ ResEffect$Index <-seq(from=-20, to = 20, by = 1)
 M3Effect <- data.frame(USM3Eq$acf, EZM3Eq$acf,JPM3Eq$acf,CNM3Eq$acf,USM310$acf,EZM310$acf,JPM310$acf,CNM310$acf)
 M3Effect$Index <-seq(from=-20, to = 20, by = 1)
 
-plot(-20:20,ResEffect[1:41,1], type='l',col='red', xlab='Lead/Lag',ylab='CCF %', main='S&P500: effect of change in CB reserves', ylim=c(-0.6,0.6))
-lines(-20:20,ResEffect[1:41,2], type='l', col='black', lty=2)
-lines(-20:20,ResEffect[1:41,3], type='l',col='green', lty=2)
-lines(-20:20,ResEffect[1:41,4], type='l', col='blue', lty=2)
+plot(-20:20,-ResEffect[1:41,1], type='l',col='red', xlab='Lead/Lag',ylab='CCF %', main='S&P500: effect of change in CB reserves', ylim=c(-0.6,0.6))
+lines(-20:20,-ResEffect[1:41,2], type='l', col='black', lty=2)
+lines(-20:20,-ResEffect[1:41,3], type='l',col='green', lty=2)
+lines(-20:20,-ResEffect[1:41,4], type='l', col='blue', lty=2)
 abline(h=0.1287, col='grey')
 abline(h=-0.1287, col='grey')
 legend(-19, 0.5, legend=c("Fed", "ECB", "BoJ", "PBoC"),
@@ -88,10 +89,10 @@ abline(h=-0.1287, col='grey')
 legend(-19, 0.5, legend=c("Fed", "ECB", "BoJ", "PBoC"),
        col=c("red","black","green", "blue"), lty=c(1,2,2,2), cex=0.8)
 
-plot(-20:20,M3Effect[1:41,1], type='l',col='red', xlab='Lead/Lag',ylab='CCF %', main='S&P500: effect of change in M3', ylim=c(-0.6,0.6))
-lines(-20:20,M3Effect[1:41,2], type='l', col='black', lty=2)
-lines(-20:20,M3Effect[1:41,3], type='l',col='green', lty=2)
-lines(-20:20,M3Effect[1:41,4], type='l', col='blue', lty=2)
+plot(-20:20,-M3Effect[1:41,1], type='l',col='red', xlab='Lead/Lag',ylab='CCF %', main='S&P500: effect of change in M3', ylim=c(-0.6,0.6))
+lines(-20:20,-M3Effect[1:41,2], type='l', col='black', lty=2)
+lines(-20:20,-M3Effect[1:41,3], type='l',col='green', lty=2)
+lines(-20:20,-M3Effect[1:41,4], type='l', col='blue', lty=2)
 abline(h=0.1287, col='grey')
 abline(h=-0.1287, col='grey')
 legend(-19, 0.5, legend=c("USM3", "EZM3", "JPM3", "CNM3"),
@@ -124,7 +125,7 @@ BoJusd <- Alldata$BoJ/Alldata$JPY.Curncy
 PBoCusd <- Alldata$PBoC.Reserves/Alldata$CNY.Curncy
 
 EZM3usd <- Alldata$EZ_M3/Alldata$EUR.Curncy
-JPM3usd <- Alldata$JP_M3/Alldata$JPY.Curncy
+JPM3usd <- Alldata$JP_M3/Alldata$JPY.Curncy/10
 CNM3usd <- Alldata$CN_M3/Alldata$CNY.Curncy
 
 Moneyusd <- data.frame(cbind('Fed'=Alldata$Fed, ECBusd,BoJusd,PBoCusd,'USM3'=Alldata$US_M3, EZM3usd,JPM3usd,CNM3usd))
@@ -145,45 +146,73 @@ M3Eq <- ccf(Mktchg1$SPX.Index,M3usdchg,type = 'correlation', main='S&P500 vs M3,
 M310 <- ccf(Mktchg1$TY1.Comdty,M3usdchg,type = 'correlation', main='10y TNote vs M3, maj econs in USD',na.action = na.pass, col='red')
 
 par(mfrow=c(1, 1), mar=c(4,3, 4,3))  ## create a 1x1 plot
-plot(-20:20,ResEq$acf, type='l',col='red', xlab='Months lead/Lag',ylab='CCF %', main='Markets & money change in USD', ylim=c(-0.6,0.6))
+plot(-20:20,-ResEq$acf, type='l',col='red', xlab='Months lead/lag',ylab='CCF %', main='Markets & global money, 6mth log change in USD, since 2003', ylim=c(-0.6,0.6))
 lines(-20:20,Res10$acf, type='l', col='black', lty=2)
-lines(-20:20,M3Eq$acf, type='l',col='green', lty=2)
+lines(-20:20,-M3Eq$acf, type='l',col='green', lty=2)
 lines(-20:20,M310$acf, type='l', col='blue', lty=2)
 abline(h=1.96/sqrt(ResEq$n.used), col='grey')
 abline(h=-1.96/sqrt(ResEq$n.used), col='grey')
-legend(-19, 0.6, legend=c("SP500 Reserves", "TNote Reserves", "SP500 M3", "TNote M3"),
+abline(h=0, col='black')
+legend(-19, -0.2, legend=c("SP500 vs Major Reserves (inverted)", "TNote vs Major Reserves", "SP500 vs Major M3 (inverted)", "TNote vs Major M3"),
        col=c("red","black","green", "blue"), lty=c(1,2,2,2), cex=0.8)
 
 
 
 #impulse response of selected money data on S&P500
 #select US M3 & Fed reserves
-shtcomb <-
-  Moneychg[,c(9,1,5)] %>%
-  filter(period >="2012-03-01")
+
+AllUSD <- data.frame("period"=Moneychg$period,"M3USD"= M3usdchg,"Reserves"=Resusdchg)
+
+ext_rge <- c(-3,3)
 
 #add S&P500 data
 mkts <- Mktchg1[,c(39,11)]
-shtcomb <- left_join(shtcomb,mkts, by='period')
+shtcomb <- left_join(AllUSD,mkts, by='period')
 
+model <- vars::VAR(shtcomb[,-1], p = 1, type = "const")
+
+feirResSPX <- irf(model, impulse = "Reserves", response = "SPX.Index",
+               n.ahead = 8, ortho = FALSE, runs = 1000)
+plot(feirResSPX)
+
+feirM3usdSPX <- irf(model, impulse = "M3USD", response = "SPX.Index",
+               n.ahead = 8, ortho = FALSE, runs = 1000)
+plot(feirM3usdSPX)
+
+feirSPXRes <- irf(model, impulse = "SPX.Index", response = "Reserves",
+                  n.ahead = 8, ortho = FALSE, runs = 1000)
+plot(feirSPXRes,ylim=ext_rge)
+
+feirSPXM3usd <- irf(model, impulse = "SPX.Index", response = "M3USD",
+                    n.ahead = 8, ortho = FALSE, runs = 1000)
+plot(feirSPXM3usd,ylim=ext_rge)
+
+#add TY1 data
+mkts <- Mktchg1[,c(39,18)]
+shtcomb[,4] <- mkts$TY1.Comdty
+colnames(shtcomb)[4] <- 'TY1.Comdty'
 #fill in a couple of NA 
 shtcomb <- tidyr::fill(shtcomb,names(shtcomb))
 
-# Estimate model for vector autoregression tests
-# remove date column 
-shtcomb <- shtcomb[,-1]
-model <- vars::VAR(shtcomb, p = 2, type = "const")
+model <- vars::VAR(shtcomb[,-1], p = 1, type = "const")
+plot(predict(model))
 
-# Look at summary statistics
-feir <- irf(model, impulse = "Fed", response = "SPX.Index",
-            n.ahead = 8, ortho = FALSE, runs = 1000)
+feirResTY1 <- irf(model, impulse = "Reserves", response = "TY1.Comdty",
+               n.ahead = 8, ortho = FALSE, runs = 1000)
+plot(feirResTY1, ylim=ext_rge)
 
-plot(feir)
+feirM3usdTY1 <- irf(model, impulse = "M3USD", response = "TY1.Comdty",
+                 n.ahead = 8, ortho = FALSE, runs = 1000)
+plot(feirM3usdTY1, ylim=ext_rge)
 
-feir <- irf(model, impulse = "USM3", response = "SPX.Index",
-            n.ahead = 8, ortho = FALSE, runs = 1000)
+feirTY1Res <- irf(model, impulse = "TY1.Comdty", response = "Reserves",
+               n.ahead = 8, ortho = FALSE, runs = 1000)
+plot(feirTY1Res, ylim=ext_rge)
 
-plot(feir)
+feirTY1M3usd <- irf(model, impulse = "TY1.Comdty", response = "M3USD",
+                 n.ahead = 8, ortho = FALSE, runs = 1000)
+plot(feirTY1M3usd, ylim=ext_rge)
+
 
 
 # #select US M3 & Fed reserves

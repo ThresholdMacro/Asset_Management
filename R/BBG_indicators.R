@@ -119,7 +119,7 @@ EZ_HICP$BBG[13:nrow(EZ_HICP)] <-
   )
 EZ_HICP <- EZ_HICP %>% filter(period >= '2003-01-01')
 
-IFO <- read_excel("Data/IFO11_2022.xlsx", 
+IFO <- read_excel("Data/IFO12_2023.xlsx", 
                          sheet = "ifo Business Climate", skip = 7)
 
 IFO <- IFO[2:nrow(IFO),]
@@ -188,6 +188,7 @@ Mktdata <- readr::read_csv("Data/MktMthly.csv")
 
 Mktchg <- data.frame(apply(Mktdata[,2:ncol(Mktdata)],2,function(x) diff(log(x), lag=1)))
 Mktchg$period <- Mktdata$period[2:nrow(Mktdata)]
+Mktchg$period <- as.Date(dmy(Mktchg$period))
 
 comb <-
   comb %>%
@@ -221,7 +222,13 @@ ccf(Mktchg$TY1.Comdty,comb$`Korea Exports`,type = 'correlation', main='Korean Ex
 
 par(mfrow=c(1, 1))
     
-df <- left_join(Mktchg,comb, by='period')
+df <- left_join(Mktchg[,c(1,8,11)],comb, by='period')
+
+df <-
+  df |>
+  filter(period <='2023-10-31' & period >= '2012-02-01') |>
+  tidyr::fill(names(df),.direction = 'down')
+
 
 tmwr_cols <- colorRampPalette(c("#91CBD765", "#CA225E"))
 

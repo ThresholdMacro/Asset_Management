@@ -79,7 +79,7 @@ df4 <- rdb("IMF","COFER","Q.W00.")
 df <-
 df4 %>%
 dplyr::select(period,value,series=series_name) %>%
-filter(year(period)>="1998-01-01") 
+filter(year(period)>="1990-01-01") 
 df <-pivot_wider(df, id_cols = 'period' ,names_from = "series", values_from = 'value')
 
 names(df) <- gsub("Quarterly – All Countries, excluding the IO – ","",names(df))
@@ -124,4 +124,5 @@ p1 <-
              "5 years",
              "%")
 p1
+
 ggplotly(p1)
